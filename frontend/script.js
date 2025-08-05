@@ -8,7 +8,7 @@ class TransportApp {
         this.endCoords = null;
         this.stopMarkers = [];
         this.routeLayer = null;
-        
+
         console.log('TransportApp initializing...');
         this.initializeApp();
         this.setupEventListeners();
@@ -27,7 +27,7 @@ class TransportApp {
         try {
             // Initialize map centered on Wrocław
             this.map = L.map('map').setView([51.1079, 17.0385], 13);
-            
+
             // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
@@ -38,7 +38,7 @@ class TransportApp {
                 console.log('Map clicked at:', e.latlng);
                 this.handleMapClick(e.latlng);
             });
-            
+
             console.log('Map initialized successfully');
         } catch (error) {
             console.error('Failed to initialize map:', error);
@@ -47,7 +47,7 @@ class TransportApp {
 
     setupEventListeners() {
         console.log('Setting up event listeners...');
-        
+
         const searchBtn = document.getElementById('search-btn');
         const clearBtn = document.getElementById('clear-btn');
         const departureTime = document.getElementById('departure-time');
@@ -173,7 +173,7 @@ class TransportApp {
 
     handleMapClick(latlng) {
         console.log('Handling map click at:', latlng);
-        
+
         if (!this.startCoords) {
             console.log('Setting start point');
             this.setStartPoint(latlng);
@@ -191,15 +191,15 @@ class TransportApp {
     setStartPoint(latlng) {
         this.startCoords = latlng;
         console.log('Start coordinates set:', this.startCoords);
-        
+
         if (this.startMarker) {
             this.map.removeLayer(this.startMarker);
         }
-        
+
         this.startMarker = L.marker(latlng, {
             icon: this.createIcon('🟢', 'start-marker')
         }).addTo(this.map);
-        
+
         this.startMarker.bindPopup('Start Point').openPopup();
         this.updateCoordinatesDisplay();
         this.updateSearchButton();
@@ -208,15 +208,15 @@ class TransportApp {
     setEndPoint(latlng) {
         this.endCoords = latlng;
         console.log('End coordinates set:', this.endCoords);
-        
+
         if (this.endMarker) {
             this.map.removeLayer(this.endMarker);
         }
-        
+
         this.endMarker = L.marker(latlng, {
             icon: this.createIcon('🔴', 'end-marker')
         }).addTo(this.map);
-        
+
         this.endMarker.bindPopup('Destination Point').openPopup();
         this.updateCoordinatesDisplay();
         this.updateSearchButton();
@@ -234,7 +234,7 @@ class TransportApp {
     updateCoordinatesDisplay() {
         const display = document.getElementById('coordinates-display');
         if (!display) return;
-        
+
         if (this.startCoords && this.endCoords) {
             display.innerHTML = `
                 <div>
@@ -257,31 +257,31 @@ class TransportApp {
     updateSearchButton() {
         const searchBtn = document.getElementById('search-btn');
         const departureTimeInput = document.getElementById('departure-time');
-        
+
         if (!searchBtn || !departureTimeInput) {
             console.log('Missing elements for button update');
             return;
         }
-        
+
         const hasValidSelection = this.startCoords && this.endCoords;
         const hasTime = departureTimeInput.value;
-        
+
         console.log('Button update check:', {
             hasValidSelection,
             hasTime: !!hasTime,
             startCoords: this.startCoords,
             endCoords: this.endCoords
         });
-        
+
         const shouldEnable = hasValidSelection && hasTime;
         searchBtn.disabled = !shouldEnable;
-        
+
         console.log('Search button disabled:', searchBtn.disabled);
     }
 
     async searchDepartures() {
         console.log('searchDepartures called');
-        
+
         if (!this.startCoords || !this.endCoords) {
             console.error('Missing coordinates');
             this.showError('Please select start and end points on the map');
@@ -290,7 +290,7 @@ class TransportApp {
 
         const departureTimeInput = document.getElementById('departure-time');
         const limitInput = document.getElementById('limit');
-        
+
         if (!departureTimeInput || !limitInput) {
             console.error('Missing form inputs');
             this.showError('Form elements not found');
@@ -311,16 +311,34 @@ class TransportApp {
         this.clearStopMarkers();
 
         try {
+            // Convert datetime-local to HH:MM format
+            const startDateTime = new Date(startTime);
+            const hours = startDateTime.getHours().toString().padStart(2, '0');
+            const minutes = startDateTime.getMinutes().toString().padStart(2, '0');
+            const timeInHHMM = `${hours}:${minutes}`;
+
+            console.log('Time conversion:', {
+                original: startTime,
+                parsed: startDateTime,
+                formatted: timeInHHMM
+            });
+
             const params = new URLSearchParams({
                 start_coordinates: `${this.startCoords.lat},${this.startCoords.lng}`,
                 end_coordinates: `${this.endCoords.lat},${this.endCoords.lng}`,
-                start_time: new Date(startTime).toISOString(),
+                start_time: timeInHHMM, // Changed from ISO to HH:MM format
                 limit: limit
             });
 
             const url = `${this.apiBaseUrl}/public_transport/city/wroclaw/closest_departures?${params}`;
             console.log('API URL:', url);
-            
+            console.log('Parameters:', {
+                start_coordinates: `${this.startCoords.lat},${this.startCoords.lng}`,
+                end_coordinates: `${this.endCoords.lat},${this.endCoords.lng}`,
+                start_time: timeInHHMM,
+                limit: limit
+            });
+
             const response = await fetch(url);
             console.log('Response status:', response.status);
 
@@ -332,9 +350,9 @@ class TransportApp {
 
             const data = await response.json();
             console.log('API Response:', data);
-            
+
             this.displayResults(data);
-            
+
             if (data.departures && data.departures.length > 0) {
                 this.displayStopsOnMap(data.departures);
             }
@@ -359,9 +377,9 @@ class TransportApp {
     displayResults(response) {
         const resultsContainer = document.getElementById('departures-list');
         if (!resultsContainer) return;
-        
+
         console.log('Displaying results:', response);
-        
+
         if (!response.departures || response.departures.length === 0) {
             resultsContainer.innerHTML = `
                 <div class="error">
@@ -373,11 +391,11 @@ class TransportApp {
         }
 
         let html = `<h4 class="font-semibold text-gray-800 mb-3">Found ${response.departures.length} departures:</h4>`;
-        
+
         response.departures.forEach((departure, index) => {
             const departureTime = new Date(departure.stop.departure_time);
             const arrivalTime = new Date(departure.stop.arrival_time);
-            
+
             html += `
                 <div class="departure-item">
                     <h4>🚏 ${departure.stop.name}</h4>
@@ -397,24 +415,24 @@ class TransportApp {
                 </div>
             `;
         });
-        
+
         resultsContainer.innerHTML = html;
     }
 
     displayStopsOnMap(departures) {
         console.log('Displaying stops on map:', departures.length);
-        
+
         departures.forEach((departure, index) => {
             try {
                 const coords = [departure.stop.coordinates.latitude, departure.stop.coordinates.longitude];
                 console.log(`Adding stop marker ${index}:`, coords);
-                
+
                 const marker = L.marker(coords, {
                     icon: this.createIcon('🚏', 'stop-marker')
                 }).addTo(this.map);
-                
+
                 this.stopMarkers.push(marker);
-                
+
                 const popupContent = `
                     <div class="stop-popup">
                         <h4>${departure.stop.name}</h4>
@@ -424,7 +442,7 @@ class TransportApp {
                         <button onclick="app.showRoute('${departure.trip_id}')" class="route-btn">Show Route</button>
                     </div>
                 `;
-                
+
                 marker.bindPopup(popupContent);
             } catch (error) {
                 console.error('Error adding stop marker:', error, departure);
@@ -434,22 +452,22 @@ class TransportApp {
 
     async showRoute(tripId) {
         console.log('Showing route for trip:', tripId);
-        
+
         try {
             const url = `${this.apiBaseUrl}/public_transport/city/wroclaw/trip/${tripId}`;
             console.log('Route API URL:', url);
-            
+
             const response = await fetch(url);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
             console.log('Route data:', data);
-            
+
             this.displayRouteOnMap(data.trip_details);
-            
+
         } catch (error) {
             console.error('Route error:', error);
             this.showError('Failed to fetch route details: ' + error.message);
@@ -458,7 +476,7 @@ class TransportApp {
 
     displayRouteOnMap(tripDetails) {
         console.log('Displaying route on map:', tripDetails);
-        
+
         if (this.routeLayer) {
             this.map.removeLayer(this.routeLayer);
         }
@@ -507,7 +525,7 @@ class TransportApp {
 
     clearSelection() {
         console.log('Clearing selection');
-        
+
         if (this.startMarker) {
             this.map.removeLayer(this.startMarker);
             this.startMarker = null;
@@ -520,7 +538,7 @@ class TransportApp {
             this.map.removeLayer(this.routeLayer);
             this.routeLayer = null;
         }
-        
+
         this.startCoords = null;
         this.endCoords = null;
         this.updateCoordinatesDisplay();
@@ -556,7 +574,7 @@ let app;
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, initializing app...');
     app = new TransportApp();
-    
+
     // Make app globally available for debugging
     window.transportApp = app;
     console.log('App available globally as window.transportApp');
