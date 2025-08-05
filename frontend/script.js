@@ -160,16 +160,21 @@ class TransportApp {
     }
 
     setDefaultDepartureTime() {
-        const departureTimeInput = document.getElementById('departure-time');
-        if (departureTimeInput) {
-            const now = new Date();
-            const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
-                .toISOString()
-                .slice(0, 16);
-            departureTimeInput.value = localDateTime;
-            console.log('Default departure time set:', localDateTime);
-        }
+    const departureTimeInput = document.getElementById('departure-time');
+    if (departureTimeInput) {
+        const now = new Date();
+        // Add 5 minutes to ensure we're looking for future departures
+        now.setMinutes(now.getMinutes() + 5);
+        
+        const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+            .toISOString()
+            .slice(0, 16);
+        departureTimeInput.value = localDateTime;
+        
+        console.log('Default departure time set:', localDateTime);
+        console.log('Will be converted to HH:MM format:', `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`);
     }
+}
 
     handleMapClick(latlng) {
         console.log('Handling map click at:', latlng);
