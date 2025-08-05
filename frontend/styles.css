@@ -1,3 +1,105 @@
 body {
     font-family: 'Inter', sans-serif;
 }
+
+/* Custom marker styles */
+.custom-marker {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    text-align: center;
+    line-height: 30px;
+}
+
+.start-marker {
+    color: #22c55e;
+}
+
+.end-marker {
+    color: #ef4444;
+}
+
+.stop-marker {
+    color: #3b82f6;
+}
+
+/* Departure item styling */
+.departure-item {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #22c55e;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.departure-item:hover {
+    background: #f1f5f9;
+    border-left-color: #16a34a;
+}
+
+.departure-item h4 {
+    color: #1e293b;
+    font-size: 1.1em;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.departure-info {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    font-size: 0.9em;
+    color: #475569;
+}
+
+.departure-info strong {
+    color: #334155;
+    font-weight: 600;
+}
+
+/* Loading and error states */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #64748b;
+}
+
+.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+/* Route button styling */
+.route-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.2s ease;
+}
+
+.route-btn:hover {
+    background: #2563eb;
+}
+
+/* Popup styling */
+.stop-popup h4 {
+    margin: 0 0 8px 0;
+    color: #1e293b;
+}
+
+.stop-popup p {
+    margin: 4px 0;
+    font-size: 0.9em;
+    color: #475569;
+}

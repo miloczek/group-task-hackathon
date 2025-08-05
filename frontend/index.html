@@ -3,42 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple API Caller</title>
+    <title>Wrocław Public Transport</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-<div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
-    <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Simple API Caller</h1>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="container mx-auto max-w-7xl">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">🚍 Wrocław Public Transport</h1>
 
-    <div class="mb-6">
-        <label for="api-endpoint-selector" class="block text-gray-700 text-sm font-bold mb-2">Select API Endpoint:</label>
-        <select id="api-endpoint-selector"
-                class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="http://localhost:5001/public_transport/city/wroclaw/closest_departures">Closest Departures (Wroclaw)</option>
-            <option value="http://localhost:5001/public_transport/city/wroclaw/trip/3_14613060">Trip Details (Trip ID: 3_14613060)</option>
-        </select>
-        <p class="text-xs text-gray-500 mt-1">
-            Choose an API endpoint to call.
-        </p>
+        <!-- Controls Panel -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label for="departure-time" class="block text-gray-700 text-sm font-bold mb-2">Departure Time:</label>
+                    <input type="datetime-local" id="departure-time" 
+                           class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="limit" class="block text-gray-700 text-sm font-bold mb-2">Max Results:</label>
+                    <select id="limit" class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                
+                <button id="search-btn" disabled 
+                        class="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    🔍 Find Departures
+                </button>
+                
+                <button id="clear-btn" 
+                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    🗑️ Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Map Container -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div id="map" class="h-96 lg:h-[600px]"></div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="bg-white p-6 rounded-lg shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Search Results</h3>
+                <div id="coordinates-display" class="bg-blue-50 p-3 rounded-lg mb-4 text-sm">
+                    <em>Click on the map to select start point</em>
+                </div>
+                <div id="departures-list">
+                    <p class="text-gray-600">Select start and destination points on the map</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel (keeping your existing API caller) -->
+        <div class="bg-white p-6 rounded-lg shadow-lg mt-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Debug API Caller</h3>
+            <div class="mb-4">
+                <label for="api-endpoint-selector" class="block text-gray-700 text-sm font-bold mb-2">Select API Endpoint:</label>
+                <select id="api-endpoint-selector"
+                        class="shadow border rounded-lg w-full py-2 px-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="http://localhost:5001/public_transport/city/wroclaw/closest_departures">Closest Departures (Wroclaw)</option>
+                    <option value="http://localhost:5001/public_transport/city/wroclaw/trip/3_14613060">Trip Details (Trip ID: 3_14613060)</option>
+                </select>
+            </div>
+
+            <button id="call-api-btn"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 mb-4">
+                Call API
+            </button>
+
+            <div id="status-message" class="mb-4 text-center text-sm"></div>
+
+            <textarea id="json-output"
+                      class="shadow border rounded-lg w-full py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 h-32 font-mono text-sm"
+                      readonly
+                      placeholder="API response will appear here..."></textarea>
+        </div>
     </div>
 
-    <button id="call-api-btn"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 ease-in-out transform hover:scale-105">
-        Call API
-    </button>
-
-    <div id="status-message" class="mt-4 text-center text-sm text-gray-600"></div>
-
-    <div class="mt-6">
-        <label for="json-output" class="block text-gray-700 text-sm font-bold mb-2">API Response (JSON):</label>
-        <textarea id="json-output"
-                  class="shadow appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-64 font-mono text-sm"
-                  readonly
-                  placeholder="API response will appear here..."></textarea>
-    </div>
-</div>
-
-<script src="script.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
