@@ -23,7 +23,7 @@ def get_trip_details(trip_id: str) -> Optional[Dict]:
     """
     conn = None
     try:
-        conn = sqlite3.connect('trips.sqlite')
+        conn = sqlite3.connect('database.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 

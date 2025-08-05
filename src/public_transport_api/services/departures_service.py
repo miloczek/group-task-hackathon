@@ -22,7 +22,7 @@ def get_closest_departures(lat: float = None, lon: float = None, limit: int = 5)
     """
     conn = None
     try:
-        conn = sqlite3.connect("trips.sqlite")
+        conn = sqlite3.connect("databse.db")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
